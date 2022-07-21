@@ -1,8 +1,25 @@
 # Intro - DCS服务求玩家信息管理系统
 
+## 进度
+
+- [x] 完成数据库的设计与部署
+- [x] 完成操作数据库用的`Springboot`的逻辑设计
+- [x] 完成数据交互用的`Netty`部署
+- [x] 完成***DCS***端的触发器设计
+- [ ] 完成管理系统前端设计
+- [ ] 使用`docker`打包
+
 ## 概述
 
 ***DCS服务器玩家信息管理系统*** 是基于DCS自带的`LuaSocket`库、`DCS Hook`、`Spring Boot + MySql`以及`Netty`来构建的。
+
+- 环境:
+  - `LuaSocket`: 2.0
+  - `DCS Hook`
+  - `SpringBoot`: 3.0
+  - `MySql`: 8.0
+  - `Netty`
+  - `Hibernate`
 
 - 目的:
 
@@ -17,15 +34,7 @@
   - 建立`Mysql`数据库用于保存玩家信息
   - 使用`DCS Hook`处理玩家事件
   - 使用`LuaSocket`以及`Netty`来将***DCS***与管理系统相连
-  - 使用`SpringBoot`来控制系统
-
-## 进度
-
-- [x] 完成数据库的设计与部署
-- [x] 完成操作数据库用的`Springboot`的逻辑设计
-- [x] 完成数据交互用的`Netty`部署
-- [x] 完成***DCS***端的触发器设计
-- [ ] 完成管理系统前端设计
+  - 使用`SpringBoot`以及`Hibernate`来控制系统以及数据库
 
 ## 一些详细设计（碎碎念+笔记）
 
@@ -91,8 +100,6 @@
 | dead       | int(10)    | 死亡次数     | default 0        |
 | landing    | int(10)    | 成功着陆次数 | default 0        |
 
-
-
 ### DCS方面的一些设计
 
 我们首先要在玩家***尝试链接服务器***的时候，获取他的一些信息，比如`ucid`，`name`。 随后我们需要开始对数据库进行操作，判断是否需要插入一条新的记录，也就是说------***注册***。我们会用`DCS Hook`来对服务器发起`request`。给服务器发送一个`Json`表明有玩家进入了。
@@ -100,9 +107,18 @@
 总体来讲，就是使用:
 
 - `onPlayerTrySendChat`来获取用户输入的`-myinfo`来执行查询操作
+
 - `onGameEvent`来处理***玩家事件***
   - `eventName`获取***事件名称（类型）***
-    - `connect` 玩家连入时，发送一段`json`用于注册
+    - `connect` :玩家***连入***时，发送一段`json`用于注册
+    
+    - `crash` :玩家***阵亡***时，发送一段`json`用于更新 ***死亡计数器*** 同时扣除分数
+    
+    - `landing` :玩家***着陆***时，发送一段`json`用于更新 ***着陆计数器*** 同时增加分数
+    
+    - `kill` :玩家***获得击杀***时，发送一段`json`用于更新 ***相应的计数器*** 同时增加分数
+    
+      >  获得击杀时，客户端发送的`json`中的`tracker`字段则是需要增加的相应计数器
 
 ```lua
 package.path  = package.path..";.\\LuaSocket\\?.lua"
@@ -271,7 +287,7 @@ end
 DCS.setUserCallbacks(runner)
 ```
 
-```json
+```
 {requestId: 0, ucid: "eee6a222e156f7f1599e435a9e4163a8", name: "DeathGun"} // 用于测试的数据.
 ```
 
