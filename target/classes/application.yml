@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url:  jdbc:mysql://localhost:3306/dcs?serverTimeZone=GMT%2B8&useSSL=true
+    username: root
+    password: chentianhao
+    type: com.zaxxer.hikari.HikariDataSource
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        new_generator_mappings: false
+        format_sql: true
+        show_sql: false
+    database-platform: mysql
+
+
+logging:
+  level:
+    com.oneonline.teaching.admin: debug
+

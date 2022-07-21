@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: org.springframework.boot:spring-boot-starter-thymeleaf:3.0.0-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/springframework/boot/spring-boot-starter-thymeleaf/3.0.0-SNAPSHOT/spring-boot-starter-thymeleaf-3.0.0-20220720.234929-521.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/org/springframework/boot/spring-boot-starter-thymeleaf/3.0.0-SNAPSHOT/spring-boot-starter-thymeleaf-3.0.0-20220720.234929-521-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/springframework/boot/spring-boot-starter-thymeleaf/3.0.0-SNAPSHOT/spring-boot-starter-thymeleaf-3.0.0-20220720.234929-521-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
