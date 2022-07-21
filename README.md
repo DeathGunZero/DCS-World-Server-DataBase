@@ -79,16 +79,17 @@
 
 #### 数据库的设计
 
-| 属性名   | 属性类型   | 用途         | 约束             |
-| -------- | ---------- | ------------ | ---------------- |
-| id       | int(10)    | 索引         | primary key      |
-| ucid     | String(35) | 用户唯一标识 | not null, unique |
-| name     | String(25) | 用户名       | not null,        |
-| pts      | int(10)    | 玩家点数     | default 0        |
-| splashAA | int(10)    | 对空战果     | default 0        |
-| splashAG | int(10)    | 对地战果     | default 0        |
-| dead     | int(10)    | 死亡次数     | default 0        |
-| landing  | int(10)    | 成功着陆次数 | default 0        |
+| 属性名     | 属性类型   | 用途         | 约束             |
+| ---------- | ---------- | ------------ | ---------------- |
+| id         | int(10)    | 索引         | primary key      |
+| ucid       | String(35) | 用户唯一标识 | not null, unique |
+| name       | String(25) | 用户名       | not null,        |
+| pts        | int(10)    | 玩家点数     | default 0        |
+| splashAA   | int(10)    | 对空战果     | default 0        |
+| splashAG   | int(10)    | 对地战果     | default 0        |
+| splashSEAD | int(10)    | 对海战果     | default 0        |
+| dead       | int(10)    | 死亡次数     | default 0        |
+| landing    | int(10)    | 成功着陆次数 | default 0        |
 
 
 
