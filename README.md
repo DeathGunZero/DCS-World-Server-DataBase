@@ -86,7 +86,7 @@
 }
 ```
 
-#### 数据库的设计
+#### 数据库的设计:
 
 | 属性名     | 属性类型   | 用途         | 约束             |
 | ---------- | ---------- | ------------ | ---------------- |
@@ -100,7 +100,9 @@
 | dead       | int(10)    | 死亡次数     | default 0        |
 | landing    | int(10)    | 成功着陆次数 | default 0        |
 
-### DCS方面的一些设计
+### DCS方面的一些设计 - `Lua`
+
+----
 
 我们首先要在玩家***尝试链接服务器***的时候，获取他的一些信息，比如`ucid`，`name`。 随后我们需要开始对数据库进行操作，判断是否需要插入一条新的记录，也就是说------***注册***。我们会用`DCS Hook`来对服务器发起`request`。给服务器发送一个`Json`表明有玩家进入了。
 
@@ -291,9 +293,191 @@ DCS.setUserCallbacks(runner)
 {requestId: 0, ucid: "eee6a222e156f7f1599e435a9e4163a8", name: "DeathGun"} // 用于测试的数据.
 ```
 
-### 单位TypeName
+### 服务端处理接收到的信息 - `Java`
 
-----
+我们选择使用`Hibernate`操纵数据库，关于数据源的设置:
+
+> 在最后我会使用docker来进行打包，所以数据源并不需要更具使用者来更改。但是在开发试用阶段，需要根据运行环境来进行更改。
+
+```yaml
+# application.yml
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url:  jdbc:mysql://localhost:3306/dcs?serverTimeZone=GMT%2B8&useSSL=true
+    username: root
+    password: chentianhao
+    type: com.zaxxer.hikari.HikariDataSource
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        new_generator_mappings: false
+        format_sql: true
+        show_sql: false
+    database-platform: mysql
+
+
+logging:
+  level:
+    com.oneonline.teaching.admin: debug
+
+```
+
+#### `Java`项目总体结构
+
+```
+- src/main/java # 项目类路径
+	- cn.deathgun.dcsluasocket # 项目包
+		- dao  # 存放 Repositroy
+		- po  # 存放实体类 Player
+		- service  # 事务层 存放事务层接口
+			- impl  # 事务层实现类
+		- utils  # 各种工具，其中包含了JSONOBject，R集。Swagger以及Netty的配置和Bean也在其中
+- resources  # 资源目录 存放2个springboot配置文件以及log4j配置
+
+```
+
+#### 代码解构
+
+> 范例，并不展示全部代码
+
+- `Dao`层
+
+  - 我们使用如下的代码来对用户进行注册，使用`Hibernate`以及`JPA`的`@Query`注解来执行。
+
+  ```java
+  @Repository
+  @Transactional
+  public interface PlayerRepository extends JpaRepository<Player, Integer> {
+      @Modifying
+      @Query(value = "INSERT INTO player(ucid, name) values(:ucid, :name)", nativeQuery = true)
+      void insertNewPlayer(@Param("ucid") String ucid, @Param("name") String name);
+  }
+  ```
+
+- `Po`层
+
+  - `Hibernate`的`Entity`
+
+  ```java
+  package cn.deathgun.dcsluasocket.po;
+  
+  import jakarta.persistence.Entity;
+  import jakarta.persistence.Table;
+  import lombok.Data;
+  
+  import jakarta.persistence.*;
+  import lombok.Data;
+  import lombok.Generated;
+  
+  @Entity
+  @Data
+  @Table(name = "player", schema = "dcs")
+  public class Player {
+  
+      private static final long serialVersionUID = 1L;
+  
+      @Id
+      @GeneratedValue(strategy = GenerationType.AUTO)
+      @Column(name = "id")
+      private Integer id;
+  
+      @Column(name = "ucid")
+      private String ucid;
+  
+      @Column(name = "name")
+      private String name;
+  
+      @Column(name = "pts")
+      private Integer pts;
+  
+      @Column(name="splashAA")
+      private Integer splashAA;
+  
+      @Column(name = "splashAG")
+      private Integer splashAG;
+  
+      @Column(name = "splashSEAD")
+      private Integer splashSEAD;
+  
+      @Column(name = "dead")
+      private Integer dead;
+  
+      @Column(name = "landing")
+      private Integer landing;
+  }
+  
+  ```
+
+- `Service`层
+
+  - 这一层调用了`Dao`层的方法，完成用户的一些事务操作
+
+  ```java
+  package cn.deathgun.dcsluasocket.service.impl;
+  
+  import cn.deathgun.dcsluasocket.dao.PlayerRepository;
+  import cn.deathgun.dcsluasocket.po.Player;
+  import cn.deathgun.dcsluasocket.service.PlayerService;
+  import jakarta.annotation.Resource;
+  import org.springframework.beans.factory.annotation.Autowired;
+  import org.springframework.stereotype.Component;
+  import org.springframework.stereotype.Service;
+  
+  
+  @Service("playerService")
+  public class PlayerServiceImpl implements PlayerService {
+  
+      @Autowired
+      private PlayerRepository playerDao;
+  
+      @Override
+      public void registeNewPlayer(String ucid, String name) {
+          playerDao.insertNewPlayer(ucid, name);
+  
+      }
+  }
+  ```
+
+- `Netty` 处理信息
+
+  - 使用`NettyHandler`类中的`channelRead`方法来读取客户端发送来的消息并加以处理
+
+  ```java
+  		// 解析发送的文本
+          JSONObject userInput = JSONObject.parseObject(msg);
+  
+          // 用户请求类型id
+          Integer userRequestId = userInput.getInteger("requestId");
+  
+          // 用户名称
+          String userName = userInput.getString("name");
+  
+          // 唯一标识id
+          String ucid = userInput.getString("ucid");
+  
+          // 查询数据库是否有该用户
+          Player playerInfo = playerService.checkPlayInfoByUcid(ucid);
+  
+          switch (userRequestId) {
+              // 用户登录 - requestid为0
+              case 0 -> {
+                  // 如果数据库中没有这个玩家就注册
+                  if (playerInfo == null) {
+                      playerService.registeNewPlayer(ucid, userName);
+                  } else { // 如果数据库有数据
+                      // 检验玩家名称是否更改
+                      if (!Objects.equals(userName, playerInfo.getName())) {
+                          playerService.updatePlayerName(ucid, userName);
+                      }
+                  }
+              }
+  ```
+
+### 单位的TypeName集
 
 #### 地面单位
 

@@ -5,7 +5,6 @@ cn\deathgun\dcsluasocket\utils\JsonUtils.class
 cn\deathgun\dcsluasocket\service\impl\SocketServiceImpl.class
 cn\deathgun\dcsluasocket\utils\ResultCode.class
 cn\deathgun\dcsluasocket\utils\NettyServer$1.class
-cn\deathgun\dcsluasocket\utils\WebSocket.class
 cn\deathgun\dcsluasocket\dao\PlayerRepository.class
 cn\deathgun\dcsluasocket\service\SocketService.class
 cn\deathgun\dcsluasocket\utils\NettyServerHandler.class

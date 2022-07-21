@@ -89,7 +89,6 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<String> {
         System.err.println("客户端发来了消息: " + channel.remoteAddress() + " 内容:  " + msg);
 
         // 解析发送的文本
-
         JSONObject userInput = JSONObject.parseObject(msg);
 
         // 用户请求类型id
